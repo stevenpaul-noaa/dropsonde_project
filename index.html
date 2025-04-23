@@ -79,20 +79,41 @@
 
         .date-controls {
             display: flex;
-            align-items: center;
-            gap: 10px;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 0; /* Remove any extra padding */
+            margin-top: 5px;
+            margin-left: 10px;
+            margin-right: 10px;
+            font-weight: bold;
         }
 
-        .date-labels {
+        .date-controls label {
             display: flex;
-            flex-direction: column;
+            font-weight: bold;
             gap: 6px;
         }
 
         .date-row {
             display: flex;
+            justify-content: center;
             align-items: center;
-            gap: 6px;
+            gap: 0.5rem;
+        }
+
+        .date-row label {
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .date-row input[type="date"] {
+            flex-grow: 1;
+        }
+
+        .date-buttons {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
         }
 
         .apply-container {
@@ -112,15 +133,6 @@
             width: 80px;
         }
 
-        #year-section button {
-            margin-left: 2px;
-            margin-right: 2px; /* or 2px, adjust to taste */
-            padding: 4px 16px;  /* smaller padding if needed */
-        }
-
-        #year-section button:last-child {
-            margin-right: 0;
-        }
         #zoom-to-fit-section {
             display: flex;
             justify-content: center;
@@ -144,11 +156,12 @@
             display: flex;
             justify-content: center;     /* Center checkboxes horizontally */
             align-items: center;         /* Ensure vertical alignment */
-            margin: 0px 0;              /* Optional: space it away from other elements */
+            margin: 5px;              /* Optional: space it away from other elements */
         }
 
         #tail-number-section label {
-            margin: 0 5px;  /* Space between each checkbox */
+            font-size: 12px;
+            margin: 0;  /* Space between each checkbox */
         }
         #operator-section {
             display: flex;
@@ -158,35 +171,83 @@
         }
         #operator-section label {
             margin-right: 10px; /* Adds some space between the label and dropdown */
+            font-weight: bold;
+        }
+
+        #sidebar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 270px;
+            max-width: 90%;
+            background: white;
+            z-index: 1000;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+            padding-top: 0px; /* Space for toggle button */
+        }
+
+        #sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        #toggle-sidebar {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1001;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 6px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+
+        #toggle-sidebar:hover {
+            background-color: #357abd;
+        }
+
+        .sidebar-title {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin: 0.5rem 0 1rem 0; /* top, right, bottom, left */
         }
 
     </style>
 
 </head>
 <body>
-    <div id="controls">
+    <button id="toggle-sidebar">&#9776;</button> <!-- Hamburger icon -->
+    <div id="sidebar">
+        <h2 class="sidebar-title">Dropsonde Map</h2>
         <div class="date-controls">
-            <div class="date-labels">
-                <div class="date-row">
-                    <label for="start-date">Start Date:</label>
-                    <input type="date" id="start-date" />
-                </div>
-                <div class="date-row">
-                    <label for="end-date">End Date:</label>
-                    <input type="date" id="end-date" />
-                </div>
+            <div class="date-row">
+                <label for="start-date">Start Date:</label>
+                <input type="date" id="start-date" />
             </div>
-            <div class="apply-container">
+            <div class="date-row">
+                <label for="end-date">End Date:</label>
+                <input type="date" id="end-date" />
+            </div>
+            <div class="date-buttons">
                 <button id="apply-dates">Apply</button>
                 <button id="reset-dates">Reset</button>
             </div>
-        </div>
-        <div id="year-section">
-            <label for="year-input">Year:</label>
-            <input type="number" id="year-input" placeholder="Enter Year" />
-            <button id="cy-btn">CY</button>
-            <button id="fy-btn">FY</button>
-            <button id="hurricane-season-btn">HX</button>
+            <div class="date-row">
+                <label for="year-input">Year:</label>
+                <input type="number" id="year-input" placeholder="Enter Year" />
+            </div>
+            <div class="date-row">
+                <button id="cy-btn">CY</button>
+                <button id="fy-btn">FY</button>
+                <button id="hurricane-season-btn">HX</button>
+            </div>
         </div>
         <hr class="separator">
         <!-- Tail Number Section -->
@@ -223,17 +284,11 @@
 
             <button id="zoom-to-fit">Zoom to Drops</button>
         </div>
-        
-
-        
-
     </div>
 
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-simple-map-screenshoter"></script>
-
 
     <script>
         const map = L.map('map', {
@@ -247,10 +302,6 @@
         // Add zoom control to top-right
         L.control.zoom({
             position: 'topright'
-        }).addTo(map);
-
-        L.simpleMapScreenshoter({
-            position: 'bottomleft'
         }).addTo(map);
 
         const startInput = document.getElementById('start-date');
@@ -430,6 +481,9 @@
             fetchAndDisplayDrops();
         });
 
+        document.getElementById('toggle-sidebar').addEventListener('click', function () {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        });
 
     </script>
 </body>
