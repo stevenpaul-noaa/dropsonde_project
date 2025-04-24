@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Dropsonde Data Map</title>
+    <title>AOC Dropsonde Map</title>
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -173,6 +173,21 @@
             margin-right: 10px; /* Adds some space between the label and dropdown */
             font-weight: bold;
         }
+        #radius-controls {
+            display: flex;
+            align-items: center; /* Centers the operator section content */
+            width: 100%; /* Ensures it occupies full width */
+            justify-content: center;
+            font-weight: bold;
+        }
+        #radius-controls label{
+            font-weight: bold;
+        }
+        #radius-controls button{
+            padding: 2px 6px;
+            margin: 0 10px;
+        }
+
 
         #sidebar {
             position: absolute;
@@ -272,16 +287,21 @@
         <hr class="separator">
         <!-- Operator Dropdown Section -->
         <div id="operator-section">
-            <label for="operator-select">Operator:</label>
-            <select id="operator-select">
-                <option value="">All</option>
-                <!-- Options will be populated dynamically -->
-            </select>
+            <label for="operator">Operator:</label>
+            <input type="text" id="operator-select" name="operator" list="operatorOptions" value="" autocomplete="off">
+            <datalist id="operatorOptions">
+                <!-- Options will be populated by JS -->
+            </datalist>
+        </div>
+        <hr class="separator">
+        <div id="radius-controls">
+            <label>Marker Radius:</label>
+            <button id="radius-decrease">−</button>
+            <span id="radius-value">1</span>
+            <button id="radius-increase">+</button>
         </div>
         <hr class="separator">
         <div id="zoom-to-fit-section">
-            <!-- <button id="export-map">Export Map</button> --> 
-
             <button id="zoom-to-fit">Zoom to Drops</button>
         </div>
     </div>
@@ -307,6 +327,7 @@
         const startInput = document.getElementById('start-date');
         const endInput = document.getElementById('end-date');
         const applyBtn = document.getElementById('apply-dates');
+
 
         // Set default date range
         startInput.value = '1996-06-08';
@@ -348,25 +369,55 @@
         }
 
         // Add operator list (replace with your actual operator list or fetch it from your data)
-        const operators = [
-            'Steven Paul',
-            'Rebecca Keller',
-            'Tom Brannigan'
+        let operators = [
+            //'Steven Paul',
+            //'Rebecca Keller',
+            //'Tom Brannigan'
             // Add more operators as needed
         ];
 
         // Populate the dropdown with operators
         const operatorSelect = document.getElementById('operator-select');
-        operators.forEach(operator => {
-            const option = document.createElement('option');
-            option.value = operator;
-            option.textContent = operator;
-            operatorSelect.appendChild(option);
-        });
+        // Fetch operators from the API and populate the dropdown
+        fetch('/api/operators')
+          .then(response => response.json())
+          .then(data => {
+            const datalist = document.getElementById('operatorOptions');
+            datalist.innerHTML = ''; // Clear any existing options
+
+            data.forEach(operator => {
+              const option = document.createElement('option');
+              option.value = operator;
+              datalist.appendChild(option);
+            });
+          })
+          .catch(error => {
+            console.error('Error fetching operators:', error);
+          });
+
 
         // Function to get the selected operator
         function getSelectedOperator() {
             return operatorSelect.value;
+        }
+
+        let markerRadius = 1;
+        const minRadius = 1;
+        const maxRadius = 10;
+
+        // Update radius display
+        function updateRadiusDisplay() {
+            document.getElementById('radius-value').textContent = markerRadius;
+        }
+
+        // Adjust and refresh markers
+        function changeMarkerRadius(delta) {
+            const newRadius = markerRadius + delta;
+            if (newRadius >= minRadius && newRadius <= maxRadius) {
+                markerRadius = newRadius;
+                updateRadiusDisplay();
+                fetchAndDisplayDrops();
+            }
         }
 
         // Modify the fetchAndDisplayDrops function to filter based on selected tails
@@ -402,7 +453,7 @@
                                 : '#555';
 
                             L.circleMarker([lat, lon], {
-                                radius: 3,
+                                radius: markerRadius,
                                 color: color,
                                 fillColor: color,
                                 fillOpacity: 1,
@@ -483,6 +534,14 @@
 
         document.getElementById('toggle-sidebar').addEventListener('click', function () {
             document.getElementById('sidebar').classList.toggle('collapsed');
+        });
+
+        document.getElementById('radius-increase').addEventListener('click', () => {
+            changeMarkerRadius(1);
+        });
+
+        document.getElementById('radius-decrease').addEventListener('click', () => {
+            changeMarkerRadius(-1);
         });
 
     </script>
