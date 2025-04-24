@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from models import Dropsonde
+from models import Dropsonde, db
 from datetime import datetime, timedelta
 
 dropsonde_bp = Blueprint('dropsonde', __name__)
@@ -36,3 +36,16 @@ def get_drops():
         'serial': d.serial
     } for d in drops])
 
+@dropsonde_bp.route("/api/operators")
+def get_operators():
+    # Use SQLAlchemy to get distinct operators
+    operators = (
+        db.session.query(Dropsonde.operator)
+        .filter(Dropsonde.operator.isnot(None), Dropsonde.operator != "")
+        .distinct()
+        .order_by(Dropsonde.operator)
+        .all()
+    )
+    # Flatten the list of tuples
+    operator_list = [op[0] for op in operators]
+    return jsonify(operator_list)
