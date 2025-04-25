@@ -139,7 +139,7 @@
             width: 100%; /* Full width of the parent */
             margin-top: 10px; /* Adjust the space between the line and the button */
         }
-        #zoom-to-fit, #export-map {
+        #zoom-to-fit {
             padding: 10px 20px; /* Optional: adjust padding */
             margin: 0px 10px;
             background-color: #4a90e2; /* Change the button color */
@@ -149,7 +149,7 @@
             cursor: pointer; /* Pointer on hover */
             text-align: center;
         }
-        #zoom-to-fit:hover, #export-map:hover {
+        #zoom-to-fit:hover {
             background-color: #357abd; /* Darker blue on hover */
         }
         #tail-number-section {
@@ -188,6 +188,9 @@
             margin: 0 10px;
         }
 
+        #year-input {
+            width:50px;
+        }
 
         #sidebar {
             position: absolute;
@@ -312,7 +315,9 @@
 
     <script>
         const map = L.map('map', {
-            zoomControl: false
+            zoomControl: false,
+            zoomSnap: 0.1,
+            zoomDelta: 0.1
         }).setView([27.988, -82.02], 3); // Approx center near Lakeland
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -323,6 +328,7 @@
         L.control.zoom({
             position: 'topright'
         }).addTo(map);
+
 
         const startInput = document.getElementById('start-date');
         const endInput = document.getElementById('end-date');
@@ -369,12 +375,7 @@
         }
 
         // Add operator list (replace with your actual operator list or fetch it from your data)
-        let operators = [
-            //'Steven Paul',
-            //'Rebecca Keller',
-            //'Tom Brannigan'
-            // Add more operators as needed
-        ];
+        let operators = [];
 
         // Populate the dropdown with operators
         const operatorSelect = document.getElementById('operator-select');
@@ -478,6 +479,8 @@
                 .catch(err => console.error('Error loading dropsonde data:', err));
         }
 
+
+
         // Add event listeners to each checkbox to re-fetch data when they change
         Object.values(tailCheckboxes).forEach(checkbox => {
             checkbox.addEventListener('change', fetchAndDisplayDrops);
@@ -543,6 +546,7 @@
         document.getElementById('radius-decrease').addEventListener('click', () => {
             changeMarkerRadius(-1);
         });
+
 
     </script>
 </body>
