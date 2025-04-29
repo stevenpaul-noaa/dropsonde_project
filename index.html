@@ -237,6 +237,10 @@
             margin: 0.5rem 0 1rem 0; /* top, right, bottom, left */
         }
 
+        #drop-count {
+            margin-left: 5px;
+        }
+
     </style>
 
 </head>
@@ -304,8 +308,14 @@
             <button id="radius-increase">+</button>
         </div>
         <hr class="separator">
+        <div id="radius-controls">
+            <label>Drops Displayed: </label>
+            <span id="drop-count"></span>
+        </div>
+        <hr class="separator">
         <div id="zoom-to-fit-section">
             <button id="zoom-to-fit">Zoom to Drops</button>
+
         </div>
     </div>
 
@@ -411,6 +421,12 @@
             document.getElementById('radius-value').textContent = markerRadius;
         }
 
+        function updateDropCount() {
+            const count = markersLayer.getLayers().length;
+            document.getElementById('drop-count').textContent = count;
+        }
+
+
         // Adjust and refresh markers
         function changeMarkerRadius(delta) {
             const newRadius = markerRadius + delta;
@@ -475,6 +491,7 @@
                     if (markersLayer.getLayers().length > 0) {
                         map.fitBounds(markersLayer.getBounds());
                     }
+                    updateDropCount();
                 })
                 .catch(err => console.error('Error loading dropsonde data:', err));
         }
